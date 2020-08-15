@@ -1,7 +1,7 @@
 from jaxnlds.nlds_smoother import NonLinearDynamicsSmoother
 from jaxnlds.forward_updates import TecLinearPhaseNestedSampling
 import jax.numpy as jnp
-from jax import random, jit
+from jax import random, jit, disable_jit
 from functools import partial
 import pylab as plt
 
@@ -11,11 +11,12 @@ def main():
     Gamma0, Omega, Sigma, T, Y_obs, amp, mu0, tec, freqs = generate_data()
 
     hmm = NonLinearDynamicsSmoother(TecLinearPhaseNestedSampling(freqs))
-    hmm = jit(partial(hmm, tol=1., maxiter=2, omega_window=11, sigma_window=5, momentum=0.,
-                      omega_diag_range=(0, 20.), sigma_diag_range=(0, jnp.inf)))
+    hmm = jit(partial(hmm, tol=1., maxiter=2, omega_window=None, sigma_window=None, momentum=0.,
+                      omega_diag_range=(0, jnp.inf), sigma_diag_range=(0, jnp.inf)))
     #
     # with disable_jit():
     keys = random.split(random.PRNGKey(0), T)
+    # with disable_jit():
     res = hmm(Y_obs, Sigma, mu0, Gamma0, Omega, amp, keys)
 
     print(res.converged, res.niter)
@@ -49,7 +50,7 @@ def main():
 
 
 def generate_data():
-    T = 10
+    T = 1000
     tec = jnp.cumsum(10. * random.normal(random.PRNGKey(0),shape=(T,)))
     TEC_CONV = -8.4479745e6  # mTECU/Hz
     freqs = jnp.linspace(121e6, 168e6, 24)

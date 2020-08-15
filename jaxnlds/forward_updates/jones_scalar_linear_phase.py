@@ -72,7 +72,8 @@ class LinearPhaseNestedSampling(ForwardUpdateEquation):
             .push(MVNPrior('param', prior_mu, prior_Gamma))
 
         def log_normal(x, mean, cov):
-            L = jnp.linalg.cholesky(cov)
+            # L = jnp.linalg.cholesky(cov)
+            L = jnp.diag(jnp.sqrt(jnp.diag(cov)))
             dx = x - mean
             dx = solve_triangular(L, dx, lower=True)
             return -0.5 * x.size * jnp.log(2. * jnp.pi) - jnp.sum(jnp.log(jnp.diag(L))) \
