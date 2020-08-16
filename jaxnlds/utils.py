@@ -6,7 +6,6 @@ from jax.scipy.signal import _convolve_nd
 
 def windowed_mean(a, w, mode='reflect'):
     if w is None:
-        T = a.shape[0]
         return jnp.broadcast_to(jnp.mean(a, axis=0, keepdims=True), a.shape)
     dims = len(a.shape)
     a = a
