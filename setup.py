@@ -7,8 +7,7 @@ __minimum_numpy_version__ = '1.16.2'
 __minimum_jax_version__ = '0.1.67'
 
 setup_requires = ['numpy>=' + __minimum_numpy_version__,
-                  'jax>=' + __minimum_jax_version__,
-                  'jaxns']
+                  'jax>=' + __minimum_jax_version__]
 
 setup(name='jaxnlds',
       version='0.0.1',
