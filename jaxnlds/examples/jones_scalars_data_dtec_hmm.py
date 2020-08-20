@@ -51,15 +51,15 @@ def main():
 
 def generate_data():
     T = 1000
-    tec = jnp.cumsum(10. * random.normal(random.PRNGKey(0),shape=(T,)))
+    tec = jnp.cumsum(15. * random.normal(random.PRNGKey(0),shape=(T,)))
     TEC_CONV = -8.4479745e6  # mTECU/Hz
     freqs = jnp.linspace(121e6, 168e6, 24)
     phase = tec[:, None] / freqs * TEC_CONV
     Y = jnp.concatenate([jnp.cos(phase), jnp.sin(phase)], axis=1)
-    Y_obs = Y + 0.25 * random.normal(random.PRNGKey(1), shape=Y.shape)
+    Y_obs = Y + 0.75 * random.normal(random.PRNGKey(1), shape=Y.shape)
     # Y_obs[500:550:2, :] += 3. * random.normal(random.PRNGKey(1),shape=Y[500:550:2, :].shape)
     Sigma = 0.5 ** 2 * jnp.eye(48)
-    Omega = jnp.diag(jnp.array([5.]))**2
+    Omega = jnp.diag(jnp.array([30.]))**2
     mu0 = jnp.zeros(1)
     Gamma0 = jnp.diag(jnp.array([200.]))**2
     amp = jnp.ones_like(phase)

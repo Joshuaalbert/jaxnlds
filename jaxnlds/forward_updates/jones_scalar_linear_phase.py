@@ -2,7 +2,7 @@ from jaxnlds.forward_updates.forward_update import ForwardUpdateEquation
 from jaxnlds.optimize import minimize
 from jaxnlds.utils import deconstrain_std, constrain_std, scalar_KL, value_and_jacobian
 from jaxns.nested_sampling import NestedSampler
-from jaxns.prior_transforms import PriorChain, MVNPrior
+from jaxns.prior_transforms import PriorChain, MVNPrior, HalfLaplacePrior
 
 from typing import NamedTuple
 
@@ -70,21 +70,26 @@ class LinearPhaseNestedSampling(ForwardUpdateEquation):
 
         prior_chain = PriorChain() \
             .push(MVNPrior('param', prior_mu, prior_Gamma))
+            # .push(HalfLaplacePrior('uncert', jnp.sqrt(jnp.mean(jnp.diag(Sigma)))))
 
         def log_normal(x, mean, cov):
-            # L = jnp.linalg.cholesky(cov)
-            L = jnp.diag(jnp.sqrt(jnp.diag(cov)))
+
+
             dx = x - mean
-            dx = solve_triangular(L, dx, lower=True)
+            # L = jnp.linalg.cholesky(cov)
+            # dx = solve_triangular(L, dx, lower=True)
+            L = jnp.sqrt(jnp.diag(cov))
+            dx = dx / L
             return -0.5 * x.size * jnp.log(2. * jnp.pi) - jnp.sum(jnp.log(jnp.diag(L))) \
                    - 0.5 * dx @ dx
 
         def log_likelihood(param, **kwargs):
             Y_model = self.forward_model(param, *control_params)
+            # Sigma = uncert**2 * jnp.eye(Y.shape[-1])
             return log_normal(Y_model, Y, Sigma)
 
         ns = NestedSampler(log_likelihood, prior_chain, sampler_name='whitened_ellipsoid')
-        results = ns(key, self._phase_basis_size * 25, max_samples=1e5, collect_samples=False,
+        results = ns(key, self._phase_basis_size * 15, max_samples=1e5, collect_samples=False,
                      termination_frac=0.01, stoachastic_uncertainty=True)
 
         post_mu = results.param_mean['param']
